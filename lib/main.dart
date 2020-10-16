@@ -4,7 +4,7 @@ import 'package:download_isolate/url%20_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'next+page.dart';
+import 'next_page.dart';
 
 void main() {
   runApp(MyApp());
