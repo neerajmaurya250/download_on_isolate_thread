@@ -31,20 +31,26 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static var j;
+  static DownloadUrl downloadUrl = DownloadUrl();
+  static int j;
   Isolate _isolate;
   bool _running = false;
   bool _paused = false;
   String _message = '';
   ReceivePort _receivePort;
   Capability _capability;
-  int i;
+  int i = 0;
+  int k;
   var listItem;
   int lengthList;
   bool progress = false;
-  DownloadUrl downloadUrl = DownloadUrl();
+  static List<int> downloaded = [];
   static List<String> url = [
     'https://files.jotform.com/jotformpdfs/guest_05d8ff12a9e7c42b/202871741050044/10202870988350059/202871741050044.pdf?md5=iF_5neoIGzvWcPw0m3jupg&expires=1602656963',
+    'https://aktu.ac.in/pdf/ADF%20Guidelines.pdf',
+    'https://aktu.ac.in/pdf/aip/AIP19-20_ShortlistedCandidates.pdf',
+    'https://aktu.ac.in/pdf/EAP-AKTU.pdf',
+    'https://aktu.ac.in/pdf/ADF%20Guidelines.pdf',
   ];
 
   @override
@@ -57,12 +63,26 @@ class _MyHomePageState extends State<MyHomePage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-
+              Text(_message),
+              StreamBuilder(
+                  initialData: downloaded,
+                  stream: downloadUrl.urlStreamController.stream,
+                  builder: (context, snapshot) {
+                    print('${snapshot.data.toString()}');
+                    return ListView.builder(
+                        shrinkWrap: true,
+                        scrollDirection: Axis.vertical,
+                        itemCount: snapshot.data.length,
+                        itemBuilder: (BuildContext context, index) {
+                          return Center(
+                            child: Text(snapshot.data[index].toString()),
+                          );
+                        });
+                  }),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-
                   RaisedButton(
                     onPressed: () {
                       Navigator.push(context,
@@ -92,6 +112,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                     child: Text('Stop'),
                   ),
+                  // RaisedButton(
+                  //   onPressed: () {
+                  //     stream();
+                  //   },
+                  //   child: Text('Stream'),
+                  // ),
                 ],
               )
             ],
@@ -110,11 +136,17 @@ class _MyHomePageState extends State<MyHomePage> {
       _message = 'Starting...';
     });
     _receivePort = ReceivePort();
-    // ThreadParams threadParams = ThreadParams(2000, _receivePort.sendPort);
-    _isolate = await Isolate.spawn(_isolateHandler, _receivePort.sendPort);
+
+    ThreadParams threadParams = ThreadParams(2000, _receivePort.sendPort);
+    _isolate = await Isolate.spawn(
+      _isolateHandler,
+      threadParams,
+    );
     _receivePort.listen(_handleMessage, onDone: () {
       print('Done');
-      setState(() {});
+      setState(() {
+        _message = 'Stopped Downloading';
+      });
     });
   }
 
@@ -142,40 +174,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _handleMessage(dynamic data) {
     setState(() {
+      k = i + 1;
+      downloaded.add(k);
+      i = k;
+      downloadUrl.urlStreamController.sink.add(downloaded);
       _message = data;
     });
   }
 
-  static void _isolateHandler(SendPort sendPort) async {
-    _downloadFile(sendPort);
+  static void _isolateHandler(ThreadParams threadParams) async {
+    _downloadFile(threadParams);
+
   }
 
-  static _downloadFile(SendPort sendPort) async {
-    for (j = 0; j < 100; j++) {
-      for (var i = 0; i < url.length; i++) {
-        String path;
-        File file;
-        HttpClient httpClient = new HttpClient();
-        var request = await httpClient.getUrl(Uri.parse(url.elementAt(i)));
-        var response = await request.close();
-        if (response.statusCode == 200) {
-          print('==================> Downloading <=============');
-          var bytes = await consolidateHttpClientResponseBytes(response);
-          new Directory('/storage/emulated/0/MFile')
-              .create()
-              .then((Directory directory) async {
-            path = directory.path;
-            file = new File('$path/$j.pdf');
-            await file.writeAsBytes(bytes);
-            print(j.toString());
-            return j;
-            // print(directory.path);
-          });
-        } else {
-          String error = response.statusCode.toString();
-          print('===============> Error <==============>>' + error);
-        }
-      }
+  static _downloadFile(ThreadParams threadParams) async {
+    for (j = 0; j < url.length; j++) {
+      String path;
+      File file;
+      HttpClient httpClient = new HttpClient();
+      var request = await httpClient.getUrl(Uri.parse(url.elementAt(j)));
+      var response = await request.close();
+      if (response.statusCode == 200) {
+        print('==================> Downloading <=============');
+        var bytes = await consolidateHttpClientResponseBytes(response);
+        new Directory('/storage/emulated/0/MFile')
+            .create()
+            .then((Directory directory) async {
+          path = directory.path;
+          file = new File('$path/$j.pdf');
+          await file.writeAsBytes(bytes);
+          downloaded.add(j);
+          downloadUrl.urlStreamController.sink.add(downloaded);
+          threadParams.sendPort.send(j.toString());
+          return j;
+          // print(directory.path);
+        });
+      } else {}
     }
   }
+}
+
+class ThreadParams {
+  ThreadParams(this.val, this.sendPort);
+
+  int val;
+  SendPort sendPort;
 }

@@ -1,9 +1,9 @@
 import 'dart:async';
 
-class DownloadUrl{
-  final urlStreamController = StreamController<String>.broadcast();
+class DownloadUrl {
+  StreamController<List<int>> urlStreamController = StreamController<List<int>>.broadcast();
 
-  void dispose(){
+  void dispose() {
     urlStreamController.close();
   }
 }
