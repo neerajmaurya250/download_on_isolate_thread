@@ -64,21 +64,15 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(_message),
-              StreamBuilder(
-                  initialData: downloaded,
-                  stream: downloadUrl.urlStreamController.stream,
-                  builder: (context, snapshot) {
-                    print('${snapshot.data.toString()}');
-                    return ListView.builder(
-                        shrinkWrap: true,
-                        scrollDirection: Axis.vertical,
-                        itemCount: snapshot.data.length,
-                        itemBuilder: (BuildContext context, index) {
-                          return Center(
-                            child: Text(snapshot.data[index].toString()),
-                          );
-                        });
-                  }),
+          ListView.builder(
+              shrinkWrap: true,
+              scrollDirection: Axis.vertical,
+              itemCount: downloaded.length,
+              itemBuilder: (BuildContext context, index) {
+                return Center(
+                  child: Text(downloaded[index].toString()),
+                );
+              }),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -112,12 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                     child: Text('Stop'),
                   ),
-                  // RaisedButton(
-                  //   onPressed: () {
-                  //     stream();
-                  //   },
-                  //   child: Text('Stream'),
-                  // ),
+
                 ],
               )
             ],
@@ -184,7 +173,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   static void _isolateHandler(ThreadParams threadParams) async {
     _downloadFile(threadParams);
-
   }
 
   static _downloadFile(ThreadParams threadParams) async {
@@ -204,10 +192,8 @@ class _MyHomePageState extends State<MyHomePage> {
           file = new File('$path/$j.pdf');
           await file.writeAsBytes(bytes);
           downloaded.add(j);
-          downloadUrl.urlStreamController.sink.add(downloaded);
-          threadParams.sendPort.send(j.toString());
+          threadParams.sendPort.send(downloaded.toString());
           return j;
-          // print(directory.path);
         });
       } else {}
     }
@@ -216,7 +202,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class ThreadParams {
   ThreadParams(this.val, this.sendPort);
-
   int val;
   SendPort sendPort;
 }
