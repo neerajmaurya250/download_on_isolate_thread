@@ -7,3 +7,11 @@ class DownloadUrl {
     urlStreamController.close();
   }
 }
+
+class DownloadProgress {
+  StreamController<double> downloadStreamController = StreamController<double>.broadcast();
+
+  void dispose(){
+    downloadStreamController.close();
+  }
+}
