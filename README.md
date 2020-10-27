@@ -1,13 +1,12 @@
 # download_isolate
 
-A new Flutter application.
+#Features:
+### 1. Download control : Start, Stop, Pause, and resume.
+### 2. Downloading from Multiple lists at same time.
+### 3. Downloading all kind of files from url and storing in phone storage at folder name "MFile" with file name extracted from URL itself.
+### 4. Camera view to make app heavy
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
+<img src="assets/1.png" width="200"/> <img src="assets/2.png" width="200"/><img src="assets/3.png" width="200"/> <img src="assets/4.png" width="200"/>
 - [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
 - [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
 
