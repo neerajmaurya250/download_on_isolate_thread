@@ -20,11 +20,11 @@ class _IsolateTwoState extends State<IsolateTwo> {
   Isolate _isolate;
   bool _running1 = false;
   bool _paused = false;
-  String _message = '';
   ReceivePort _receivePort;
   Capability _capability;
   double per = 0;
   bool downloading = false;
+  bool paused = false;
   static List<String> image = [
     'https://ze-robot.com/dl/ul/ultraviolet-4k-wallpaper-2560%C3%971600.jpg',
     'https://i.imgur.com/sjvtlq0.jpg',
@@ -39,44 +39,68 @@ class _IsolateTwoState extends State<IsolateTwo> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text(
-          _message,
-          style: TextStyle(color: Colors.redAccent, fontSize: 20),
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        // Text(
+        //   _message,
+        //   style: TextStyle(color: Colors.redAccent, fontSize: 20),
+        // ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            RaisedButton(
-              onPressed: () async {
-                var status = await Permission.storage.status;
-                if (!status.isGranted) {
-                  await Permission.storage.request();
-                }
-                _start();
-                setState(() {
-                  downloading = true;
-                });
-              },
-              child: Text('Download 2'),
+            Padding(
+              padding: const EdgeInsets.only(left: 20),
+              child: FloatingActionButton(
+                  backgroundColor:
+                      downloading == true ? Colors.green : Colors.blue,
+                  child: Column(
+                    children: [
+                      Text('2'),
+                      Icon(Icons.download_rounded),
+                    ],
+                  ),
+                  onPressed: () async {
+                    var status = await Permission.storage.status;
+                    if (!status.isGranted) {
+                      await Permission.storage.request();
+                    }
+                    _start();
+                    setState(() {
+                      downloading = true;
+                    });
+                  }),
             ),
-            RaisedButton(
-              onPressed: () async {
-                _stop();
-                setState(() {
-                  downloading = true;
-                });
-              },
-              child: Text('Stop 2'),
-            ),
-            RaisedButton(
-              onPressed: () async {
-                _pause();
-                setState(() {
-                  downloading = true;
-                });
-              },
-              child: _paused == true ? Text('Play') : Text('Pause'),
-            ),
+            Row(
+              children: [
+                IconButton(
+                    icon: Icon(
+                        downloading == true
+                            ? Icons.stop_outlined
+                            : Icons.stop_rounded,
+                        color: Colors.red,
+                        size: 33),
+                    onPressed: () {
+                      _stop();
+                      setState(() {
+                        downloading = false;
+                        paused = false;
+                      });
+                    }),
+                IconButton(
+                    icon: Icon(
+                      paused == true
+                          ? Icons.play_arrow_rounded
+                          : Icons.pause_circle_filled_rounded,
+                      color: Colors.red,
+                    ),
+                    onPressed: () {
+                      _pause();
+                      setState(() {
+                        if (downloading == true) {
+                          paused = !paused;
+                        }
+                      });
+                    }),
+              ],
+            )
           ],
         ),
       ],
@@ -89,7 +113,6 @@ class _IsolateTwoState extends State<IsolateTwo> {
     }
     setState(() {
       _running1 = true;
-      _message = 'Starting...';
     });
     _receivePort = ReceivePort();
 
@@ -100,9 +123,7 @@ class _IsolateTwoState extends State<IsolateTwo> {
     );
     _receivePort.listen(_handleMessage, onDone: () {
       print('Done');
-      setState(() {
-        _message = 'Stopped Downloading';
-      });
+      setState(() {});
     });
   }
 
@@ -123,7 +144,6 @@ class _IsolateTwoState extends State<IsolateTwo> {
       _paused ? _isolate.resume(_capability) : _capability = _isolate.pause();
       setState(() {
         _paused = !_paused;
-        _message = 'Paused';
         print(_paused);
       });
     }
@@ -132,7 +152,6 @@ class _IsolateTwoState extends State<IsolateTwo> {
   void _handleMessage(dynamic data) {
     setState(() {
       widget.downloadedList.downloadedListStreamController.sink.add(data);
-      _message = data;
     });
   }
 

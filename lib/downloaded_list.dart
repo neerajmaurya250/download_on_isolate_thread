@@ -21,15 +21,55 @@ class _DownloadedState extends State<Downloaded> {
           if (snapshot.hasData) {
             downloaded.add(snapshot.data);
             print('=====================' + snapshot.data);
-            return ListView.builder(
-                shrinkWrap: true,
-                scrollDirection: Axis.vertical,
-                itemCount: downloaded.length,
-                itemBuilder: (BuildContext context, index) {
-                  return Center(
-                    child: Text(downloaded[index]),
-                  );
-                });
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(left: 10,top: 8),
+                      child: Text('Downloaded',style: TextStyle(fontSize: 25,fontWeight: FontWeight.bold),),
+                    ),
+                    FlatButton(onPressed: (){
+                      setState(() {
+                        downloaded = [];
+                      });
+                    }, child: Text('clear list'))
+                ],
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: ListView.builder(
+                      shrinkWrap: true,
+                      scrollDirection: Axis.vertical,
+                      itemCount: downloaded.length,
+                      itemBuilder: (BuildContext context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.all(2.0),
+                          child: Container(
+
+                            color: Colors.grey[300],
+
+                              child: Row(
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Icon(Icons.done_outline_rounded, color: Colors.green,),
+                                  ),
+                                  SizedBox(
+                                    width: 15,
+                                  ),
+                                  Text(downloaded[index]),
+                                ],
+                              )
+                          ),
+                        );
+                      }),
+                ),
+              ],
+            );
           } else {
             return Container();
           }

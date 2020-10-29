@@ -57,6 +57,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     var x = MediaQuery.of(context).size;
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Isolate Download'),
+        centerTitle: true,
+      ),
       body: SafeArea(
         child: Container(
           height: x.height * 1.0,
@@ -65,6 +69,13 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 //Camera View
                 CameraView(camera: widget.camera1,),
+                //Horizontal Line
+                Padding(
+                  padding: const EdgeInsets.only(left: 10,right: 10),
+                  child: Divider(
+                    color: Colors.grey[800],
+                  ),
+                ),
                 //NextPage and Download Button
                 HomePage(),
               ],
