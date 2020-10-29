@@ -1,17 +1,21 @@
 import 'dart:io';
 import 'dart:isolate';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../url_bloc.dart';
 
-class IsolateThree extends StatefulWidget {
+class IsolateTwo extends StatefulWidget {
+  final DownloadedList downloadedList;
+
+  const IsolateTwo({Key key, this.downloadedList}) : super(key: key);
+
   @override
-  _IsolateThreeState createState() => _IsolateThreeState();
+  _IsolateTwoState createState() => _IsolateTwoState();
 }
 
-class _IsolateThreeState extends State<IsolateThree> {
+class _IsolateTwoState extends State<IsolateTwo> {
   static int j;
   Isolate _isolate;
   bool _running1 = false;
@@ -21,41 +25,24 @@ class _IsolateThreeState extends State<IsolateThree> {
   Capability _capability;
   double per = 0;
   bool downloading = false;
-  static List<String> downloaded = [];
-  static List<String> video = [
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-avi-file.avi',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mov-file.mov',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mpg-file.mpg',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-wmv-file.wmv',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-flv-file.flv',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-webm-file.webm',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mkv-file.mkv',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-ogv-file.ogv',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-3gp-file.3gp',
-    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-3g2-file.3g2'
+  static List<String> image = [
+    'https://ze-robot.com/dl/ul/ultraviolet-4k-wallpaper-2560%C3%971600.jpg',
+    'https://i.imgur.com/sjvtlq0.jpg',
+    'https://i.pinimg.com/originals/3b/8a/d2/3b8ad2c7b1be2caf24321c852103598a.jpg',
+    'https://www.setaswall.com/wp-content/uploads/2017/03/Artistic-Landscape-4K-Wallpaper-3840x2160.jpg',
+    'https://pixelz.cc/wp-content/uploads/2017/11/iron-man-3-tony-stark-uhd-4k-wallpaper.jpg',
+    'https://www.wallpapertip.com/wmimgs/0-2393_macbook-pro-wallpaper-4k.jpg',
+    'https://cdn.wccftech.com/wp-content/uploads/2020/02/windows-10-12-scaled.jpg'
   ];
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text('Downloading...', style: TextStyle(fontSize: 25)),
-        Text('Downloaded ${downloaded.length} / ${video.length}'),
-        Text(per.toString()),
         Text(
           _message,
           style: TextStyle(color: Colors.redAccent, fontSize: 20),
         ),
-        //Downloaded items List
-        ListView.builder(
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            itemCount: downloaded.length,
-            itemBuilder: (BuildContext context, index) {
-              return Center(
-                child: Text(downloaded[index].toString()),
-              );
-            }),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -74,30 +61,28 @@ class _IsolateThreeState extends State<IsolateThree> {
             ),
             RaisedButton(
               onPressed: () async {
-
                 _stop();
                 setState(() {
                   downloading = true;
-                  downloaded = [];
                 });
               },
               child: Text('Stop 2'),
             ),
             RaisedButton(
               onPressed: () async {
-
                 _pause();
                 setState(() {
                   downloading = true;
                 });
               },
-              child: _paused == true? Text('Play'):Text('Pause'),
+              child: _paused == true ? Text('Play') : Text('Pause'),
             ),
           ],
         ),
       ],
     );
   }
+
   void _start() async {
     if (_running1) {
       return;
@@ -108,7 +93,7 @@ class _IsolateThreeState extends State<IsolateThree> {
     });
     _receivePort = ReceivePort();
 
-    ThreadParams threadParams = ThreadParams(downloaded, _receivePort.sendPort);
+    ThreadParams threadParams = ThreadParams(_receivePort.sendPort);
     _isolate = await Isolate.spawn(
       _isolateHandler,
       threadParams,
@@ -120,6 +105,7 @@ class _IsolateThreeState extends State<IsolateThree> {
       });
     });
   }
+
   void _stop() {
     if (null != _isolate) {
       setState(() {
@@ -131,6 +117,7 @@ class _IsolateThreeState extends State<IsolateThree> {
       _isolate = null;
     }
   }
+
   void _pause() {
     if (null != _isolate) {
       _paused ? _isolate.resume(_capability) : _capability = _isolate.pause();
@@ -141,34 +128,30 @@ class _IsolateThreeState extends State<IsolateThree> {
       });
     }
   }
+
   void _handleMessage(dynamic data) {
     setState(() {
-      downloaded.add(data);
-      // k = i + 1;
-      // String fileName = basename(url.elementAt(j));
-      // downloaded.add(fileName);
+      widget.downloadedList.downloadedListStreamController.sink.add(data);
       _message = data;
-      // i = k;
-      // downloadUrl.urlStreamController.sink.add(downloaded);
-      // _message = data.toString();
     });
   }
+
   static void _isolateHandler(ThreadParams threadParams) async {
     _download1(threadParams);
-
   }
+
   static _download1(ThreadParams threadParams) async {
-    for (j = 0; j < video.length; j++) {
+    for (j = 0; j < image.length; j++) {
       String path;
       File file;
       HttpClient httpClient = new HttpClient();
       var response;
-      var request = await httpClient.getUrl(Uri.parse(video.elementAt(j)));
+      var request = await httpClient.getUrl(Uri.parse(image.elementAt(j)));
 
       response = await request.close();
       if (response.statusCode == 200) {
         print('==================> Downloading <=============');
-        String fileName = basename(video.elementAt(j));
+        String fileName = basename(image.elementAt(j));
         print("=========> FILE NAME <=========" + fileName);
         var bytes = await consolidateHttpClientResponseBytes(response);
         new Directory('/storage/emulated/0/MFile')
@@ -177,7 +160,6 @@ class _IsolateThreeState extends State<IsolateThree> {
           path = directory.path;
           file = new File('$path/$fileName');
           file.writeAsBytes(bytes);
-          downloaded.add(fileName);
           threadParams.sendPort.send(fileName);
           return j;
         });
@@ -185,9 +167,9 @@ class _IsolateThreeState extends State<IsolateThree> {
     }
   }
 }
-class ThreadParams {
-  ThreadParams(this.downloaded, this.sendPort);
 
-  List<String> downloaded;
+class ThreadParams {
+  ThreadParams(this.sendPort);
+
   SendPort sendPort;
 }

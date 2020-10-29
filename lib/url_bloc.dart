@@ -8,10 +8,10 @@ class DownloadUrl {
   }
 }
 
-class DownloadProgress {
-  StreamController<double> downloadStreamController = StreamController<double>.broadcast();
+class DownloadedList {
+  StreamController<String> downloadedListStreamController = StreamController<String>.broadcast();
 
   void dispose(){
-    downloadStreamController.close();
+    downloadedListStreamController.close();
   }
 }

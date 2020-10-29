@@ -1,6 +1,6 @@
 # download_isolate
 
-#Features:
+# Features:
 ### 1. Download control : Start, Stop, Pause, and resume.
 ### 2. Downloading from Multiple lists at same time.
 ### 3. Downloading all kind of files from url and storing in phone storage at folder name "MFile" with file name extracted from URL itself.

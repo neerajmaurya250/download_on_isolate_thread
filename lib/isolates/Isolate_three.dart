@@ -1,18 +1,21 @@
 import 'dart:io';
 import 'dart:isolate';
-import 'package:download_isolate/isolates/IsolateThree.dart';
-import 'package:download_isolate/isolates/isolate_2.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../url_bloc.dart';
 
-class DownloadIsolate extends StatefulWidget {
+class IsolateThree extends StatefulWidget {
+  final DownloadedList downloadedList;
+
+  const IsolateThree({Key key, this.downloadedList}) : super(key: key);
+
   @override
-  _DownloadIsolateState createState() => _DownloadIsolateState();
+  _IsolateThreeState createState() => _IsolateThreeState();
 }
 
-class _DownloadIsolateState extends State<DownloadIsolate> {
+class _IsolateThreeState extends State<IsolateThree> {
   static int j;
   Isolate _isolate;
   bool _running1 = false;
@@ -22,92 +25,69 @@ class _DownloadIsolateState extends State<DownloadIsolate> {
   Capability _capability;
   double per = 0;
   bool downloading = false;
-  static List<String> downloaded = [];
-  static List<String> pdf = [
-    'http://www.africau.edu/images/default/sample.pdf',
-    'https://aktu.ac.in/pdf/ADF%20Guidelines.pdf',
-    'https://aktu.ac.in/pdf/aip/AIP19-20_ShortlistedCandidates.pdf',
-    'https://aktu.ac.in/pdf/EAP-AKTU.pdf',
-    'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
-    'https://books.goalkicker.com/PythonBook/PythonNotesForProfessionals.pdf'
+  static List<String> video = [
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mp4-file.mp4',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-avi-file.avi',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mov-file.mov',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mpg-file.mpg',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-wmv-file.wmv',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-flv-file.flv',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-webm-file.webm',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-mkv-file.mkv',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-ogv-file.ogv',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-3gp-file.3gp',
+    'https://www.learningcontainer.com/wp-content/uploads/2020/05/sample-3g2-file.3g2'
   ];
 
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Text('Downloading...', style: TextStyle(fontSize: 25)),
-        Text('Downloaded ${downloaded.length} / ${pdf.length}'),
-        Text(per.toString()),
         Text(
           _message,
           style: TextStyle(color: Colors.redAccent, fontSize: 20),
         ),
-        //Downloaded items List
-        ListView.builder(
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            itemCount: downloaded.length,
-            itemBuilder: (BuildContext context, index) {
-              return Center(
-                child: Text(downloaded[index].toString()),
-              );
-            }),
         Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            // RaisedButton(
-            //   onPressed: () {
-            //     Navigator.push(context,
-            //         MaterialPageRoute(builder: (context) => NextPage()));
-            //   },
-            //   child: Text('NextPage'),
-            // ),
             RaisedButton(
               onPressed: () async {
                 var status = await Permission.storage.status;
                 if (!status.isGranted) {
                   await Permission.storage.request();
                 }
-                _start1();
+                _start();
                 setState(() {
                   downloading = true;
                 });
               },
-              child: Text('Download 1'),
+              child: Text('Download 3'),
             ),
             RaisedButton(
-              onPressed: () {
+              onPressed: () async {
                 _stop();
                 setState(() {
                   downloading = true;
-                  downloaded = [];
                 });
               },
-              child: Text('Stop 1'),
+              child: Text('Stop 3'),
             ),
             RaisedButton(
-              onPressed: () {
+              onPressed: () async {
                 _pause();
+                setState(() {
+                  downloading = true;
+                });
               },
-              child: _paused == true? Text('Play'):Text('Pause'),
-
+              child: _paused == true ? Text('Play') : Text('Pause'),
             ),
           ],
         ),
-        //Download2 & Download3 Button
-        IsolateTwo(),
-
-        IsolateThree(),
-
-        // Pause and Stop Button
-
       ],
     );
   }
 
-  void _start1() async {
+  void _start() async {
     if (_running1) {
       return;
     }
@@ -117,7 +97,7 @@ class _DownloadIsolateState extends State<DownloadIsolate> {
     });
     _receivePort = ReceivePort();
 
-    ThreadParams threadParams = ThreadParams(downloaded, _receivePort.sendPort);
+    ThreadParams threadParams = ThreadParams(_receivePort.sendPort);
     _isolate = await Isolate.spawn(
       _isolateHandler,
       threadParams,
@@ -155,10 +135,8 @@ class _DownloadIsolateState extends State<DownloadIsolate> {
 
   void _handleMessage(dynamic data) {
     setState(() {
-      downloaded.add(data);
-
+      widget.downloadedList.downloadedListStreamController.sink.add(data);
       _message = data;
-
     });
   }
 
@@ -167,17 +145,17 @@ class _DownloadIsolateState extends State<DownloadIsolate> {
   }
 
   static _download1(ThreadParams threadParams) async {
-    for (j = 0; j < pdf.length; j++) {
+    for (j = 0; j < video.length; j++) {
       String path;
       File file;
       HttpClient httpClient = new HttpClient();
       var response;
-      var request = await httpClient.getUrl(Uri.parse(pdf.elementAt(j)));
+      var request = await httpClient.getUrl(Uri.parse(video.elementAt(j)));
 
       response = await request.close();
       if (response.statusCode == 200) {
         print('==================> Downloading <=============');
-        String fileName = basename(pdf.elementAt(j));
+        String fileName = basename(video.elementAt(j));
         print("=========> FILE NAME <=========" + fileName);
         var bytes = await consolidateHttpClientResponseBytes(response);
         new Directory('/storage/emulated/0/MFile')
@@ -186,7 +164,6 @@ class _DownloadIsolateState extends State<DownloadIsolate> {
           path = directory.path;
           file = new File('$path/$fileName');
           file.writeAsBytes(bytes);
-          downloaded.add(fileName);
           threadParams.sendPort.send(fileName);
           return j;
         });
@@ -196,8 +173,7 @@ class _DownloadIsolateState extends State<DownloadIsolate> {
 }
 
 class ThreadParams {
-  ThreadParams(this.downloaded, this.sendPort);
+  ThreadParams(this.sendPort);
 
-  List<String> downloaded;
   SendPort sendPort;
 }
