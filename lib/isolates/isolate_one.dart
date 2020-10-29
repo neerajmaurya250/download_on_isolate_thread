@@ -1,17 +1,21 @@
 import 'dart:io';
 import 'dart:isolate';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 import 'package:permission_handler/permission_handler.dart';
+import '../url_bloc.dart';
 
-class IsolateTwo extends StatefulWidget {
+class IsolateOne extends StatefulWidget {
+  final DownloadedList downloadedList;
+
+  const IsolateOne({Key key, this.downloadedList}) : super(key: key);
+
   @override
-  _IsolateTwoState createState() => _IsolateTwoState();
+  _IsolateOneState createState() => _IsolateOneState();
 }
 
-class _IsolateTwoState extends State<IsolateTwo> {
+class _IsolateOneState extends State<IsolateOne> {
   static int j;
   Isolate _isolate;
   bool _running1 = false;
@@ -21,40 +25,26 @@ class _IsolateTwoState extends State<IsolateTwo> {
   Capability _capability;
   double per = 0;
   bool downloading = false;
-  static List<String> downloaded = [];
-  static List<String> image = [
-    'https://ze-robot.com/dl/ul/ultraviolet-4k-wallpaper-2560%C3%971600.jpg',
-    'https://i.imgur.com/sjvtlq0.jpg',
-    'https://i.pinimg.com/originals/3b/8a/d2/3b8ad2c7b1be2caf24321c852103598a.jpg',
-    'https://www.setaswall.com/wp-content/uploads/2017/03/Artistic-Landscape-4K-Wallpaper-3840x2160.jpg',
-    'https://pixelz.cc/wp-content/uploads/2017/11/iron-man-3-tony-stark-uhd-4k-wallpaper.jpg',
-    // 'https://www.chromethemer.com/download/hd-wallpapers/wicked-nature-4k-3840x2160.jpg',
-    'https://www.wallpapertip.com/wmimgs/0-2393_macbook-pro-wallpaper-4k.jpg',
-    'https://cdn.wccftech.com/wp-content/uploads/2020/02/windows-10-12-scaled.jpg'
+  static List<String> pdf = [
+    'http://www.africau.edu/images/default/sample.pdf',
+    'https://aktu.ac.in/pdf/ADF%20Guidelines.pdf',
+    'https://aktu.ac.in/pdf/aip/AIP19-20_ShortlistedCandidates.pdf',
+    'https://aktu.ac.in/pdf/EAP-AKTU.pdf',
+    'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf',
+    'https://books.goalkicker.com/PythonBook/PythonNotesForProfessionals.pdf'
   ];
+
   @override
   Widget build(BuildContext context) {
     return Column(
       children: [
         Text('Downloading...', style: TextStyle(fontSize: 25)),
-        Text('Downloaded ${downloaded.length} / ${image.length}'),
-        Text(per.toString()),
         Text(
           _message,
           style: TextStyle(color: Colors.redAccent, fontSize: 20),
         ),
-        //Downloaded items List
-        ListView.builder(
-            shrinkWrap: true,
-            scrollDirection: Axis.vertical,
-            itemCount: downloaded.length,
-            itemBuilder: (BuildContext context, index) {
-              return Center(
-                child: Text(downloaded[index].toString()),
-              );
-            }),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             RaisedButton(
               onPressed: () async {
@@ -62,40 +52,36 @@ class _IsolateTwoState extends State<IsolateTwo> {
                 if (!status.isGranted) {
                   await Permission.storage.request();
                 }
-                _start();
+                _start1();
                 setState(() {
                   downloading = true;
                 });
               },
-              child: Text('Download 2'),
+              child: Text('Download 1'),
             ),
             RaisedButton(
-              onPressed: () async {
-
+              onPressed: () {
                 _stop();
                 setState(() {
                   downloading = true;
-                  downloaded = [];
+                  // downloaded = [];
                 });
               },
-              child: Text('Stop 2'),
+              child: Text('Stop 1'),
             ),
             RaisedButton(
-              onPressed: () async {
-
+              onPressed: () {
                 _pause();
-                setState(() {
-                  downloading = true;
-                });
               },
-              child: _paused == true? Text('Play'):Text('Pause'),
+              child: _paused == true ? Text('Play') : Text('Pause'),
             ),
           ],
         ),
       ],
     );
   }
-  void _start() async {
+
+  void _start1() async {
     if (_running1) {
       return;
     }
@@ -105,7 +91,7 @@ class _IsolateTwoState extends State<IsolateTwo> {
     });
     _receivePort = ReceivePort();
 
-    ThreadParams threadParams = ThreadParams(downloaded, _receivePort.sendPort);
+    ThreadParams threadParams = ThreadParams(_receivePort.sendPort);
     _isolate = await Isolate.spawn(
       _isolateHandler,
       threadParams,
@@ -117,6 +103,7 @@ class _IsolateTwoState extends State<IsolateTwo> {
       });
     });
   }
+
   void _stop() {
     if (null != _isolate) {
       setState(() {
@@ -128,6 +115,7 @@ class _IsolateTwoState extends State<IsolateTwo> {
       _isolate = null;
     }
   }
+
   void _pause() {
     if (null != _isolate) {
       _paused ? _isolate.resume(_capability) : _capability = _isolate.pause();
@@ -138,34 +126,31 @@ class _IsolateTwoState extends State<IsolateTwo> {
       });
     }
   }
+
   void _handleMessage(dynamic data) {
     setState(() {
-      downloaded.add(data);
-      // k = i + 1;
-      // String fileName = basename(url.elementAt(j));
-      // downloaded.add(fileName);
+      // downloaded.add(data);
+      widget.downloadedList.downloadedListStreamController.sink.add(data);
       _message = data;
-      // i = k;
-      // downloadUrl.urlStreamController.sink.add(downloaded);
-      // _message = data.toString();
     });
   }
+
   static void _isolateHandler(ThreadParams threadParams) async {
     _download1(threadParams);
-
   }
+
   static _download1(ThreadParams threadParams) async {
-    for (j = 0; j < image.length; j++) {
+    for (j = 0; j < pdf.length; j++) {
       String path;
       File file;
       HttpClient httpClient = new HttpClient();
       var response;
-      var request = await httpClient.getUrl(Uri.parse(image.elementAt(j)));
+      var request = await httpClient.getUrl(Uri.parse(pdf.elementAt(j)));
 
       response = await request.close();
       if (response.statusCode == 200) {
         print('==================> Downloading <=============');
-        String fileName = basename(image.elementAt(j));
+        String fileName = basename(pdf.elementAt(j));
         print("=========> FILE NAME <=========" + fileName);
         var bytes = await consolidateHttpClientResponseBytes(response);
         new Directory('/storage/emulated/0/MFile')
@@ -174,7 +159,6 @@ class _IsolateTwoState extends State<IsolateTwo> {
           path = directory.path;
           file = new File('$path/$fileName');
           file.writeAsBytes(bytes);
-          downloaded.add(fileName);
           threadParams.sendPort.send(fileName);
           return j;
         });
@@ -182,9 +166,9 @@ class _IsolateTwoState extends State<IsolateTwo> {
     }
   }
 }
-class ThreadParams {
-  ThreadParams(this.downloaded, this.sendPort);
 
-  List<String> downloaded;
+class ThreadParams {
+  ThreadParams( this.sendPort);
+
   SendPort sendPort;
 }

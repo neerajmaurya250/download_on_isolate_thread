@@ -1,15 +1,8 @@
-import 'dart:io';
-import 'dart:isolate';
 import 'package:camera/camera.dart';
-import 'package:download_isolate/isolates/download_isolate.dart';
-import 'package:download_isolate/url%20_bloc.dart';
+import 'package:download_isolate/home.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'camera/camera_view.dart';
-import 'next_page.dart';
 
 // List<CameraDescription> cameras;
 void main() async {
@@ -59,8 +52,6 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static DownloadUrl downloadUrl = DownloadUrl();
-
 
   @override
   Widget build(BuildContext context) {
@@ -72,10 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                //NextPage and Download Button
-                DownloadIsolate(),
                 //Camera View
                 CameraView(camera: widget.camera1,),
+                //NextPage and Download Button
+                HomePage(),
               ],
             ),
           ),
@@ -83,8 +74,5 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
-
-
-
 }
 
